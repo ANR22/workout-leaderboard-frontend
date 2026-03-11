@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Gym workout">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f3ff"/>
+      <stop offset="100%" stop-color="#ede9fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <rect x="80" y="150" width="480" height="16" rx="8" fill="#1f2937"/>
+  <rect x="120" y="128" width="22" height="60" rx="4" fill="#111827"/>
+  <rect x="150" y="120" width="26" height="76" rx="4" fill="#111827"/>
+  <rect x="178" y="128" width="22" height="60" rx="4" fill="#111827"/>
+  <rect x="440" y="128" width="22" height="60" rx="4" fill="#111827"/>
+  <rect x="466" y="120" width="26" height="76" rx="4" fill="#111827"/>
+  <rect x="496" y="128" width="22" height="60" rx="4" fill="#111827"/>
+  <circle cx="320" cy="86" r="24" fill="#7c3aed" opacity="0.2"/>
+  <path d="M300 258 C350 220 410 230 470 252" stroke="#a78bfa" stroke-width="10" fill="none" stroke-linecap="round"/>
+</svg>
