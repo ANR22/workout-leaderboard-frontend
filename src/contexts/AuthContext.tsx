@@ -33,14 +33,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     fallbackName: string
   ): User | null => {
-    if (!response.userId || !response.fullName) {
+    const resolvedUserId = Number(response.userId ?? response.id);
+    if (!Number.isFinite(resolvedUserId) || resolvedUserId <= 0) {
       return null;
     }
 
+    const resolvedName =
+      response.fullName ||
+      response.name ||
+      fallbackName ||
+      email.split('@')[0] ||
+      'User';
+
     return {
-      id: response.userId,
+      id: resolvedUserId,
       email,
-      name: response.fullName || fallbackName,
+      name: resolvedName,
     };
   };
 
@@ -67,17 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
       const result = await loginUser(email, password);
+      const status = String(result.status || '').toUpperCase();
+      const token = result.token || result.accessToken || result.jwt;
+      const hasToken = Boolean(token);
+      const hasUserId = Number.isFinite(Number(result.userId ?? result.id));
+      const isStatusSuccess = ['SUCCESS', 'OK', 'TRUE'].includes(status);
 
-      if (result.status === 'SUCCESS' && result.token) {
+      if ((isStatusSuccess || hasToken || hasUserId) && hasUserId) {
         const loggedInUser = buildUserFromAuth(result, email, 'User');
         if (!loggedInUser) {
           return {
             success: false,
-            message: 'Invalid login response: userId/fullName missing',
+            message: 'Invalid login response: userId is missing',
           };
         }
 
-        setAuthToken(result.token);
+        if (token) {
+          setAuthToken(token);
+        }
         setUser(loggedInUser);
         localStorage.setItem('leaderboard_user', JSON.stringify(loggedInUser));
         return { success: true, message: result.message };
@@ -101,17 +116,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; message: string }> => {
     try {
       const result = await signupUser(name, email, password);
+      const status = String(result.status || '').toUpperCase();
+      const token = result.token || result.accessToken || result.jwt;
+      const hasToken = Boolean(token);
+      const hasUserId = Number.isFinite(Number(result.userId ?? result.id));
+      const isStatusSuccess = ['SUCCESS', 'OK', 'TRUE'].includes(status);
 
-      if (result.status === 'SUCCESS' && result.token) {
+      if ((isStatusSuccess || hasToken || hasUserId) && hasUserId) {
         const signedUpUser = buildUserFromAuth(result, email, name);
         if (!signedUpUser) {
           return {
             success: false,
-            message: 'Invalid signup response: userId/fullName missing',
+            message: 'Invalid signup response: userId is missing',
           };
         }
 
-        setAuthToken(result.token);
+        if (token) {
+          setAuthToken(token);
+        }
         setUser(signedUpUser);
         localStorage.setItem('leaderboard_user', JSON.stringify(signedUpUser));
         return { success: true, message: result.message };

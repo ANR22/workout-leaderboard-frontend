@@ -7,6 +7,18 @@ import { SubmitScoreModal } from '../components/SubmitScoreModal';
 import { useAuth } from '../contexts/AuthContext';
 import { getChallengeImage } from '../utils/challengeImages';
 
+const parseDate = (value?: string): Date | null => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const isChallengeEnded = (challenge: Challenge): boolean => {
+  const end = parseDate(challenge.endDate);
+  if (!end) return false;
+  return end.getTime() < Date.now();
+};
+
 export function ChallengeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -61,8 +73,10 @@ export function ChallengeDetailPage() {
     );
   }
 
+  const challengeEnded = isChallengeEnded(challenge);
+
   const handleSubmitScore = async (value: number) => {
-    if (!user) return;
+    if (!user || challengeEnded) return;
 
     try {
       setSubmitting(true);
@@ -75,6 +89,7 @@ export function ChallengeDetailPage() {
   };
 
   const handleJoin = async () => {
+    if (challengeEnded) return;
     setJoinLoading(true);
     // Simulate join action (no backend endpoint for this yet)
     setTimeout(() => {
@@ -137,12 +152,14 @@ export function ChallengeDetailPage() {
               <div className="mb-6">
                 <div
                   className={`inline-block px-4 py-2 rounded-full font-semibold text-sm ${
-                    hasJoined
+                    challengeEnded
+                      ? 'bg-rose-100 text-rose-700 border border-rose-300'
+                      : hasJoined
                       ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
                       : 'bg-amber-100 text-amber-700 border border-amber-300'
                   }`}
                 >
-                  {hasJoined ? '✓ Joined' : 'Not Joined'}
+                  {challengeEnded ? 'Challenge Ended' : hasJoined ? '✓ Joined' : 'Not Joined'}
                 </div>
               </div>
 
@@ -159,6 +176,18 @@ export function ChallengeDetailPage() {
                     >
                       Login / Sign Up
                     </Link>
+                  </div>
+                ) : challengeEnded ? (
+                  <div>
+                    <button
+                      disabled
+                      className="w-full bg-slate-300 text-slate-600 font-semibold py-3 px-4 rounded-xl cursor-not-allowed"
+                    >
+                      Challenge Ended
+                    </button>
+                    <p className="text-slate-500 text-sm mt-4">
+                      This challenge has ended. Joining and score submissions are disabled.
+                    </p>
                   </div>
                 ) : !hasJoined ? (
                   <button
@@ -180,7 +209,7 @@ export function ChallengeDetailPage() {
               </div>
 
               {/* Help Text */}
-              {!hasJoined && (
+              {!hasJoined && !challengeEnded && (
                 <p className="text-slate-500 text-sm mt-4">
                   Join the challenge to submit your scores and compete with
                   others!
@@ -194,6 +223,7 @@ export function ChallengeDetailPage() {
             <Leaderboard
               challengeId={challenge.id}
               refreshTrigger={refreshTrigger}
+              challengeEnded={challengeEnded}
               onRefresh={() => console.log('Leaderboard refreshed')}
             />
           </div>

@@ -6,12 +6,14 @@ interface LeaderboardProps {
   challengeId: number;
   onRefresh?: () => void;
   refreshTrigger?: number;
+  challengeEnded?: boolean;
 }
 
 export function Leaderboard({
   challengeId,
   onRefresh,
   refreshTrigger,
+  challengeEnded = false,
 }: LeaderboardProps) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +92,13 @@ export function Leaderboard({
                 const isFirstPlace = index === 0;
                 const isSecondPlace = index === 1;
                 const isThirdPlace = index === 2;
+                const rank = entry.rank || index + 1;
+                const displayName =
+                  entry.fullName ||
+                  entry.userFullName ||
+                  entry.userName ||
+                  entry.name ||
+                  `User ${entry.userId}`;
 
                 let medalEmoji = '';
                 let rowBgColor = 'hover:bg-slate-50';
@@ -112,14 +121,12 @@ export function Leaderboard({
                   >
                     <td className="px-6 py-4">
                       <span className="text-lg font-bold text-slate-900">
-                        {medalEmoji
-                          ? `${medalEmoji} #${entry.rank || index + 1}`
-                          : `#${entry.rank || index + 1}`}
+                        {challengeEnded && medalEmoji ? medalEmoji : `#${rank}`}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-slate-700 font-medium">
-                        User {entry.userId}
+                        {displayName}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

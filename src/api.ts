@@ -23,18 +23,61 @@ const buildHeaders = (): HeadersInit => {
 };
 
 export interface AuthResponse {
-  status: 'SUCCESS' | 'ERROR';
+  status: 'SUCCESS' | 'ERROR' | string;
   userId?: number;
   fullName?: string;
   token?: string;
+  id?: number;
+  name?: string;
+  accessToken?: string;
+  jwt?: string;
   message: string;
 }
+
+const normalizeAuthResponse = (raw: unknown): AuthResponse => {
+  const source = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const wrapped =
+    source.data && typeof source.data === 'object'
+      ? (source.data as Record<string, unknown>)
+      : source;
+
+  const statusRaw = (wrapped.status ?? source.status ?? 'ERROR') as string;
+  const status = String(statusRaw).toUpperCase();
+
+  return {
+    status,
+    userId: Number(wrapped.userId ?? wrapped.id ?? source.userId ?? source.id),
+    fullName: String(
+      (wrapped.fullName ?? wrapped.name ?? source.fullName ?? source.name ?? '')
+    ) || undefined,
+    token:
+      (wrapped.token as string) ||
+      (wrapped.accessToken as string) ||
+      (wrapped.jwt as string) ||
+      (source.token as string) ||
+      (source.accessToken as string) ||
+      (source.jwt as string) ||
+      undefined,
+    id: Number(wrapped.id ?? source.id),
+    name: String((wrapped.name ?? source.name ?? '')) || undefined,
+    accessToken:
+      (wrapped.accessToken as string) ||
+      (source.accessToken as string) ||
+      undefined,
+    jwt: (wrapped.jwt as string) || (source.jwt as string) || undefined,
+    message: String(wrapped.message ?? source.message ?? 'Authentication failed'),
+  };
+};
 
 export interface LeaderboardEntry {
   metricId: number;
   aggregatedScore: number;
   rank: number;
   userId: number;
+  fullName?: string;
+  userFullName?: string;
+  userName?: string;
+  name?: string;
 }
 
 export interface Challenge {
@@ -66,7 +109,7 @@ export const loginUser = async (
     body: JSON.stringify({ email, password }),
   });
 
-  const data = (await response.json()) as AuthResponse;
+  const data = normalizeAuthResponse(await response.json());
   if (!response.ok) {
     throw new Error(data.message || 'Login failed');
   }
@@ -87,7 +130,7 @@ export const signupUser = async (
     body: JSON.stringify({ fullName, email, password }),
   });
 
-  const data = (await response.json()) as AuthResponse;
+  const data = normalizeAuthResponse(await response.json());
   if (!response.ok) {
     throw new Error(data.message || 'Signup failed');
   }

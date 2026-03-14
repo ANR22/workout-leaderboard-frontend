@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,8 +12,14 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login, signup } = useAuth();
+  const { login, signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,10 +34,10 @@ export function AuthPage() {
         result = await signup(email, password, name);
       }
 
-      if (result.success) {
-        navigate('/');
-      } else {
+      if (!result.success) {
         setError(result.message);
+      } else {
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
